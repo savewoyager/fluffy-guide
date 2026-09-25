@@ -1,20 +1,74 @@
-﻿#include<iostream>
+﻿#define _CRT_SECURE_NO_WARNINGS
+#include<iostream>
 #include<string>
 #include<sstream>
 #include<windows.h>
 using namespace std;
+const char* username = getenv("USERNAME");
 void command_prompt()
 {
-	printf("frisk@frisk:~$ ");
+	printf("%s@%s:~$ ", username, username);
 }
+void ls(string instr)
+{
+	stringstream ss(instr);
+	ss >> instr;
+	cout << instr;
+	while (ss >> instr)
+		cout << ' ' << instr;
+	cout << '\n';
+
+}
+void cd(string instr)
+{
+	stringstream ss(instr);
+	ss >> instr;
+	cout << instr;
+	while (ss >> instr)
+		cout << ' ' << instr;
+	cout << '\n';
+}
+void kill(string instr)
+{
+	int number;
+	stringstream ss(instr);
+	ss >> instr;
+	if (ss >> instr)
+	{
+		try
+		{
+			number = stoi(instr);
+			cout << "exit " << number << '\n';
+			exit(0);
+		}
+		catch (invalid_argument const& ex)
+		{
+			cout << "\nbash: exit: ";
+			cout << instr;
+			while (ss >> instr)
+				cout << ' ' << instr;
+			cout << " :numeric argument required";
+			exit(0);
+		}
+	}
+}
+void not_found(string instr)
+{
+	stringstream ss(instr);
+	ss >> instr;
+	cout << "\nbash: " << instr;
+	while (ss >> instr)
+		cout << ' ' << instr;
+	cout << ": command not found\n";
+}
+
 int main() 
 {
 	cout << "To run command as administrator (user " << '"' << "root" << '"' \
 		<< "), use " << '"' << "sudo <command>" << '"' << ".\nSee " << '"' << "man sudo_root" << '"' << " for details.\n";
 	setlocale(LC_ALL, "Russian");
 	string command = "";
-	string buffer = "";
-	int number;
+	string instr = "";
 	while (true) 
 	{
 		command_prompt();
@@ -22,54 +76,25 @@ int main()
 		if (command == "")
 			continue;
 		stringstream ss(command);
-		while (ss >> buffer) 
+		ss >> instr;
+		if (instr == "ls")
 		{
-			if (buffer == "ls")
-			{
-				cout << buffer;
-				while (ss >> buffer)
-					cout << ' ' << buffer;
-				cout << '\n';
-				continue;
-			}
-			else if (buffer == "cd")
-			{
-				cout << buffer;
-				while (ss >> buffer)
-					cout << ' ' << buffer;
-				cout << '\n';
-				continue;
-			}
-			else if (buffer == "exit")
-			{
-				if (ss >> buffer)
-				{
-					try 
-					{
-						number = stoi(buffer);
-						cout << "exit " << number << '\n';
-						return 0;
-					}
-					catch (invalid_argument const& ex)
-					{
-						cout << "\nbash: exit: ";
-						cout << buffer;
-						while (ss >> buffer)
-							cout << ' ' << buffer;
-						cout << " :numeric argument required";
-						return 0;
-					}
-				}
-			}
-			else 
-			{
-				
-				cout << "\nbash: " << buffer;
-				while (ss >> buffer)
-					cout << ' ' << buffer;
-				cout << ": command not found\n";
-				break;
-			}
+			ls(command);
+			continue;
+		}
+		else if (instr == "cd")
+		{
+			cd(command);
+			continue;
+		}
+		else if (instr == "exit")
+		{
+			kill(command);
+		}
+		else 
+		{
+			not_found(command);
+			continue;
 		}
 	};
 }
