@@ -1,0 +1,55 @@
+# Build artifacts
+Debug/
+Release/
+x64/
+x86/
+*.exe
+*.dll
+*.lib
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.pch
+*.ipch
+*.tlog
+*.log
+*.cache
+*.sdf
+*.opensdf
+*.suo
+*.user
+*.aps
+*.ncb
+*.plg
+*.opt
+*.clw
+*.sbr
+*.bsc
+*.map
+*.exp
+
+# Visual Studio
+.vs/
+*.vcxproj.user
+*.vcxproj.filters
+*.vcxproj
+*.sln
+
+# Archives
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python (на всякий случай)
+__pycache__/
+*.pyc
+*.pyo
