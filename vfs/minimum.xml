@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <vfs>
-    <file name="hello.txt" type="text">Hello!</file>
+    <file name="hello.txt" type="base64">SGVsbG8h</file>
+
+    <file name="data.bin" type="base64">SGVsbG8gV29ybGQh</file>
+
+    <directory name="documents">
+        <file name="report.txt" type="base64">VmlydHVhbCBmaWxlIHN5c3RlbSByZXBvcnQ=</file>
+        <file name="archive.bin" type="base64">AQIDBAUGBwg=</file>
+    </directory>
 </vfs>
