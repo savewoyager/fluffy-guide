@@ -6,6 +6,7 @@
 #include<windows.h>
 using namespace std;
 const char* username = getenv("USERNAME");
+static int errors = 0;
 void command_prompt()
 {
 	printf("%s@%s:~$ ", username, username);
@@ -29,7 +30,7 @@ void cd(string instr)
 		cout << ' ' << instr;
 	cout << '\n';
 }
-void kill(string instr)
+bool kill(string instr)
 {
 	int number;
 	stringstream ss(instr);
@@ -39,8 +40,8 @@ void kill(string instr)
 		try
 		{
 			number = stoi(instr);
-			cout << "exit " << number << '\n';
-			exit(0);
+			cout << "exit code: " << number << '\n';
+			return false;
 		}
 		catch (invalid_argument const& ex)
 		{
@@ -48,11 +49,12 @@ void kill(string instr)
 			cout << instr;
 			while (ss >> instr)
 				cout << ' ' << instr;
-			cout << " :numeric argument required";
-			exit(0);
+			cout << " :numeric argument required\n";
+			errors++;
+			return false;
 		}
 	}
-	exit(0);
+	return false;
 }
 void not_found(string instr)
 {
@@ -62,6 +64,7 @@ void not_found(string instr)
 	while (ss >> instr)
 		cout << ' ' << instr;
 	cout << ": command not found\n";
+	errors++;
 }
 
 bool execute(string command)
@@ -79,8 +82,13 @@ bool execute(string command)
 		kill(command);
 		return false;
 	}
-	else
+	else 
+	{
 		not_found(command);
+		errors++;
+		return true;
+	}
+
 	return true;
 }
 
@@ -121,18 +129,17 @@ int main(int argc, char* argv[])
 		command_prompt();
 		cout << line << '\n';
 
-		if (!execute(line))
+		if (!execute(line)) 
 		{
 			file.close();
-			return 0;
+			if (errors > 0)
+				cout << "В ходе работы программы были обнаружены ошибки\n";
 		}
-	}
-	if (file.bad())
-	{
-		cerr << "Error: failed to read startup script\n";
-		return 1;
+			
 	}
 	file.close();
+	if (errors > 0) 
+		cout << "В ходе работы программы были обнаружены ошибки\n";
 	while (true) 
 	{
 		command_prompt();
