@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vfs>
+    <directory name="home">
+        <directory name="student">
+            <directory name="documents">
+                <file name="report.txt" type="text">Report</file>
+            </directory>
+        </directory>
+    </directory>
+</vfs>
