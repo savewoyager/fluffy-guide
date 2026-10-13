@@ -5,8 +5,10 @@
 #include<fstream>
 #include<windows.h>
 #include<vector>
-#include <iterator>
+#include<iterator>
+#include<pugixml.hpp>
 using namespace std;
+using namespace pugi;
 const char* username = getenv("USERNAME");
 static int errors = 0;
 
@@ -14,7 +16,6 @@ static int errors = 0;
 bool load_vfs(const string& path)
 {
     ifstream vfs(path);
-
     cout << "[VFS] загрузка из: " << path << '\n';
 
     if (!vfs.is_open())
