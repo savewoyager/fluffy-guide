@@ -177,6 +177,7 @@ void ls(string instr, const string& path)
 			<< path << '\n';
 		cerr << "[VFS ERROR] Причина: "
 			<< result.description() << '\n';
+		errors++;
 		return;
 	}
 	stringstream ss(instr);
@@ -189,6 +190,7 @@ void ls(string instr, const string& path)
 		{
 			cerr << "ls: invalid argument: "\
 				<< arg << endl;
+			errors++;
 			return;
 		}
 		for (size_t i = 1; i < arg.size(); i++) 
@@ -205,8 +207,9 @@ void ls(string instr, const string& path)
 					f_a = true;
 					break;
 				default:
-					cerr << "ls: неизвестный флаг: -"\
-						<< arg[i] << '\n';
+					cerr << "ls: неизвестный флаг: "\
+						<< arg << '\n';
+					errors++;
 					return;
 			}
 		}
@@ -285,6 +288,7 @@ void cd(string instr, const string& path)
 	if (!doc.load_file(path.c_str()))
 	{
 		cerr << "Ошибка загрузки XML\n";
+		errors++;
 		return;
 	}
 	stringstream ss(instr);
@@ -322,6 +326,7 @@ void cd(string instr, const string& path)
 	if (!target)
 	{
 		cerr << "cd: каталог не найден: " << arg << '\n';
+		errors++;
 		return;
 	}
 	current_path = new_path;
@@ -366,9 +371,11 @@ time_now->tm_hour, time_now->tm_min);
 		printf("%s\tpts/0\t%d-%d-%d %d:%d\n", \
 			username, time_now->tm_year + 1900, time_now->tm_mon + 1, time_now->tm_mday, \
 			time_now->tm_hour, time_now->tm_min);
+		return;
 	}
 	else
 		cerr << "ls: неизвестный флаг: " << instr << endl;
+	errors++;
 }
 void rev(string instr, const string& path) 
 {

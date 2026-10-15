@@ -2,7 +2,7 @@
 <vfs>
     <directory name="home">
         <file name="hello.txt" type="base64">SGVsbG8h</file>
-        <file name="notes.txt" type="base64">TXkgbm90ZXM=</file>
+        <file name="notes.txt" type="base64">ABCDEF</file>
     </directory>
 	<file name=".anonymus" type="base64">SGVsbG8h</file>
     <file name="readme.txt" type="base64">VkZTIHRlc3Q=</file>

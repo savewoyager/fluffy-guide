@@ -1,0 +1,9 @@
+ls -l
+ls -a
+ls -h
+ls -hal
+ls -ah
+ls -l -a -h
+ls -a -l -h
+cd home
+ls -l

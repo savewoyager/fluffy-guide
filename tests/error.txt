@@ -1,0 +1,9 @@
+//Ошибочный комментарий
+ls -lfg
+ls -agu
+cd homeless
+cd -sdfa
+cd /home/Cheboksary
+who am i
+who -s
+rev not_a_file.txt
