@@ -170,7 +170,6 @@ void ls(string instr, const string& path)
 {
 	xml_document doc;
 	xml_parse_result result = doc.load_file(path.c_str());
-	
 	if (!result)
 	{
 		cerr << "[VFS ERROR] Не получилось открыть "
@@ -355,17 +354,70 @@ bool kill(string instr)
 }
 void who(string instr) 
 {
-	time_t t = time(nullptr);
-	tm* time_now = localtime(&t);
-	printf("NAME\tLINE\tTIME\n\
+	stringstream ss(instr);
+	ss >> instr;
+	if (!(ss >> instr)) {
+		time_t t = time(nullptr);
+		tm* time_now = localtime(&t);
+		printf("NAME\tLINE\tTIME\n\
 root\ttty1\t%d-%d-%d %d:%d\n", \
-time_now->tm_year + 1900, time_now->tm_mon + 1 , time_now->tm_mday, \
+time_now->tm_year + 1900, time_now->tm_mon + 1, time_now->tm_mday, \
 time_now->tm_hour, time_now->tm_min);
-	printf("%s\tpts/0\t%d-%d-%d %d:%d\n", \
-username,time_now->tm_year + 1900, time_now->tm_mon + 1, time_now->tm_mday, \
-time_now->tm_hour, time_now->tm_min);
+		printf("%s\tpts/0\t%d-%d-%d %d:%d\n", \
+			username, time_now->tm_year + 1900, time_now->tm_mon + 1, time_now->tm_mday, \
+			time_now->tm_hour, time_now->tm_min);
+	}
+	else
+		cerr << "ls: неизвестный флаг: " << instr << endl;
 }
+void rev(string instr, const string& path) 
+{
+	string filename;
+	stringstream ss(instr);
+	ss >> filename;
+	if (!(ss >> filename)) 
+	{
+		cerr << "Укажите файл\n";
+		return;
+	}
+	xml_document doc;
+	xml_parse_result result = doc.load_file(path.c_str());
+	if (!result)
+	{
+		cerr << "[VFS ERROR] Не получилось открыть "
+			<< "или разобрать XML-файл: "
+			<< path << '\n';
+		cerr << "[VFS ERROR] Причина: "
+			<< result.description() << '\n';
+		return;
+	}
+	xml_node root = doc.document_element();
+	xml_node directory = find_directory(root, current_path);
+	xml_node find_file;
+	for (xml_node node : directory.children())
+	{
+		if (node.type() != node_element)
+			continue;
 
+		string name = node.attribute("name").value();
+		string type = node.name();
+
+		if (type != "directory" && type != "file")
+			continue;
+		if (name[0] == '.')
+			continue;
+		if (name == filename)
+			find_file = node;
+	}
+	if (!find_file) 
+	{
+		cerr << "Файл не найден\n";
+		return;
+	}
+	string content = find_file.child_value();
+	reverse(content.begin(), content.end());
+	cout << content << endl;
+}
 void not_found(string instr)
 {
 	stringstream ss(instr);
@@ -388,6 +440,8 @@ bool execute(string command, const string& path)
 		cd(command, path);
 	else if (inst == "who")
 		who(command);
+	else if (inst == "rev")
+		rev(command, path);
 	else if (inst == "exit")
 	{
 		kill(command);
