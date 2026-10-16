@@ -1,6 +1,7 @@
 # Build artifacts
 Debug/
 Release/
+packages/
 x64/
 x86/
 *.exe
