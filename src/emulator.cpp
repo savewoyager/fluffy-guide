@@ -9,19 +9,118 @@
 #include<filesystem>
 #include<iomanip>
 #include<ctime>
-namespace fs = std::filesystem;
+#include<vector>
+#include <algorithm>
 using namespace std;
 using namespace pugi;
+
+xml_document vfs_doc;
+
 const char* username = getenv("USERNAME");
 static int errors = 0;
 string current_path = "/";
+xml_node find_directory(xml_node root, const string& path);
+string normalize_path(const string& path)
+{
+	vector<string> parts;
+	string full_path;
+
+	if (!path.empty() && path[0] == '/')
+		full_path = path;
+	else if (current_path == "/")
+		full_path = "/" + path;
+	else
+		full_path = current_path + "/" + path;
+
+	stringstream ss(full_path);
+	string part;
+
+	while (getline(ss, part, '/'))
+	{
+		if (part.empty() || part == ".")
+			continue;
+
+		if (part == "..")
+		{
+			if (!parts.empty())
+				parts.pop_back();
+		}
+		else
+			parts.push_back(part);
+	}
+
+	string result = "/";
+	for (size_t i = 0; i < parts.size(); i++)
+	{
+		if (i > 0)
+			result += "/";
+		result += parts[i];
+	}
+
+	return result;
+}
+
+xml_node find_entry(xml_node parent, const string& name)
+{
+	for (xml_node node : parent.children())
+	{
+		if (node.type() != node_element)
+			continue;
+
+		string type = node.name();
+		if ((type == "file" || type == "directory") &&
+			string(node.attribute("name").value()) == name)
+			return node;
+	}
+
+	return xml_node();
+}
+
+xml_node find_entry_by_path(const string& path)
+{
+	string normalized = normalize_path(path);
+
+	if (normalized == "/")
+		return vfs_doc.document_element();
+
+	size_t pos = normalized.find_last_of('/');
+	string parent_path = normalized.substr(0, pos);
+	string name = normalized.substr(pos + 1);
+
+	if (parent_path.empty())
+		parent_path = "/";
+
+	xml_node parent = find_directory(
+		vfs_doc.document_element(), parent_path);
+
+	if (!parent)
+		return xml_node();
+
+	return find_entry(parent, name);
+}
+
+xml_node find_parent_by_path(const string& path)
+{
+	string normalized = normalize_path(path);
+
+	if (normalized == "/")
+		return xml_node();
+
+	size_t pos = normalized.find_last_of('/');
+	string parent_path = normalized.substr(0, pos);
+
+	if (parent_path.empty())
+		parent_path = "/";
+
+	return find_directory(vfs_doc.document_element(), parent_path);
+}
+
+
 bool load_vfs(const string& path)
 {
 	cout << "[VFS] Загрузка из: " << path << '\n';
 
-	xml_document doc;
-	xml_parse_result result = doc.load_file(path.c_str());
-
+	xml_parse_result result = vfs_doc.load_file(path.c_str());
 	if (!result)
 	{
 		cerr << "[VFS ERROR] Не получилось открыть "
@@ -35,7 +134,7 @@ bool load_vfs(const string& path)
 	cout << "[VFS] Файл открылся.\n";
 
 	// Проверяем корневой элемент.
-	xml_node root = doc.document_element();
+	xml_node root = vfs_doc.document_element();
 
 	if (!root || string(root.name()) != "vfs")
 	{
@@ -43,98 +142,6 @@ bool load_vfs(const string& path)
 		return false;
 	}
 	return true;
-	//int directories = 0;
-	//int files = 0;
-
-	//// Рекурсивно проверяем каталоги и файлы
-	//function<bool(xml_node)> check_node;
-
-	//check_node = [&](xml_node parent) -> bool
-	//{
-	//	for (xml_node node : parent.children())
-	//	{
-	//		// Пропускаем текстовые узлы и комментарии
-	//		if (node.type() != node_element)
-	//			continue;
-
-	//		string name = node.name();
-
-	//		if (name == "directory")
-	//		{
-	//			++directories;
-
-	//			if (!node.attribute("name"))
-	//			{
-	//				cerr << "[VFS ERROR] "
-	//					<< "Отсутствует атрибут name в directory.\n";
-	//				return false;
-	//			}
-
-	//			if (!check_node(node))
-	//				return false;
-	//		}
-	//		else if (name == "file")
-	//		{
-	//			++files;
-
-	//			if (!node.attribute("name"))
-	//			{
-	//				cerr << "[VFS ERROR] "
-	//					<< "Отсутствует атрибут name в file.\n";
-	//				return false;
-	//			}
-
-	//			xml_attribute type = node.attribute("type");
-
-	//			if (!type)
-	//			{
-	//				cerr << "[VFS ERROR] "
-	//					<< "Отсутствует атрибут type в file.\n";
-	//				return false;
-	//			}
-
-	//			string file_type = type.value();
-
-	//			if (file_type != "text" &&
-	//				file_type != "base64")
-	//			{
-	//				cerr << "[VFS ERROR] "
-	//					<< "Неподдерживаемый тип файла: "
-	//					<< file_type << '\n';
-	//				return false;
-	//			}
-
-	//			// Файлы не должны содержать другие элементы.
-	//			for (xml_node child : node.children())
-	//			{
-	//				if (child.type() == node_element)
-	//				{
-	//					cerr << "[VFS ERROR] "
-	//						<< "Файл не может содержать "
-	//						<< "вложенные элементы.\n";
-	//					return false;
-	//				}
-	//			}
-	//		}
-	//		else
-	//		{
-	//			cerr << "[VFS ERROR] Неподдерживаемый тег: "
-	//				<< name << '\n';
-	//			return false;
-	//		}
-	//	}
-
-	//	return true;
-	//};
-	//if (!check_node(root))
-	//	return false;
-	//cout << "[VFS] Формат XML структуры корректен.\n";
-	//cout << "[VFS] Каталогов: " << directories << '\n';
-	//cout << "[VFS] Файлов: " << files << '\n';
-	//cout << "[VFS] Найдено элементов: "
-	//	<< directories + files << '\n';
-	//cout << "[VFS] Загрузка завершена успешно.\n\n";
-
 }
 xml_node find_directory(xml_node root, const string& path)
 { // поиск нужной директории
@@ -166,20 +173,129 @@ void command_prompt()
 {
 	printf("%s@%s:~$ ", username, username);
 }
-void ls(string instr, const string& path)
+
+void cp(string instr)
 {
-	xml_document doc;
-	xml_parse_result result = doc.load_file(path.c_str());
-	if (!result)
+	stringstream ss(instr);
+	string command, arg;
+	vector<string> args;
+
+	ss >> command;
+
+	bool recursive = false;
+
+	while (ss >> arg)
 	{
-		cerr << "[VFS ERROR] Не получилось открыть "
-			<< "или разобрать XML-файл: "
-			<< path << '\n';
-		cerr << "[VFS ERROR] Причина: "
-			<< result.description() << '\n';
+		if (arg == "-r" || arg == "-R")
+			recursive = true;
+		else if (!arg.empty() && arg[0] == '-')
+		{
+			cerr << "cp: неизвестный флаг: " << arg << '\n';
+			errors++;
+			return;
+		}
+		else
+			args.push_back(arg);
+	}
+
+	if (args.size() != 2)
+	{
+		cerr << "Использование: cp [-r] источник назначение\n";
 		errors++;
 		return;
 	}
+
+	string src_path = normalize_path(args[0]);
+	string dst_path = normalize_path(args[1]);
+
+	xml_node src = find_entry_by_path(src_path);
+
+	if (!src || src == vfs_doc.document_element())
+	{
+		cerr << "cp: источник не найден: " << args[0] << '\n';
+		errors++;
+		return;
+	}
+
+	string type = src.name();
+
+	if (type == "directory" && !recursive)
+	{
+		cerr << "cp: пропущена директория (не указан -r): "
+			<< args[0] << '\n';
+		errors++;
+		return;
+	}
+
+	if (type != "file" && type != "directory")
+	{
+		cerr << "cp: неподдерживаемый тип объекта\n";
+		errors++;
+		return;
+	}
+
+	xml_node dst = find_entry_by_path(dst_path);
+	xml_node target_parent;
+	string target_name;
+
+	if (dst)
+	{
+		if (string(dst.name()) != "directory")
+		{
+			cerr << "cp: назначение не является директорией: "
+				<< args[1] << '\n';
+			errors++;
+			return;
+		}
+
+		target_parent = dst;
+		target_name = src.attribute("name").value();
+	}
+	else
+	{
+		target_parent = find_parent_by_path(dst_path);
+
+		size_t pos = dst_path.find_last_of('/');
+		target_name = dst_path.substr(pos + 1);
+	}
+
+	if (!target_parent || target_name.empty())
+	{
+		cerr << "cp: каталог назначения не найден: "
+			<< args[1] << '\n';
+		errors++;
+		return;
+	}
+
+	// Нельзя копировать объект в самого себя или внутрь него.
+	string source_prefix = src_path + "/";
+	if (dst_path == src_path ||
+		(dst_path.size() > source_prefix.size() - 1 &&
+			dst_path.compare(0, source_prefix.size(), source_prefix) == 0))
+	{
+		cerr << "cp: нельзя копировать объект внутрь самого себя\n";
+		errors++;
+		return;
+	}
+
+	if (find_entry(target_parent, target_name))
+	{
+		cerr << "cp: объект уже существует: "
+			<< target_name << '\n';
+		errors++;
+		return;
+	}
+
+	xml_node copy = target_parent.append_copy(src);
+	copy.attribute("name").set_value(target_name.c_str());
+
+	cout << "Скопировано: " << args[0]
+		<< " -> " << args[1] << '\n';
+}
+
+void ls(string instr, const string& path)
+{
+	xml_document& doc = vfs_doc;
 	stringstream ss(instr);
 	string command, arg;
 	ss >> command;
@@ -284,13 +400,7 @@ void ls(string instr, const string& path)
 }
 void cd(string instr, const string& path)
 {
-	xml_document doc;
-	if (!doc.load_file(path.c_str()))
-	{
-		cerr << "Ошибка загрузки XML\n";
-		errors++;
-		return;
-	}
+	xml_document& doc = vfs_doc;
 	stringstream ss(instr);
 	string command, arg;
 	ss >> command;
@@ -387,18 +497,8 @@ void rev(string instr, const string& path)
 		cerr << "Укажите файл\n";
 		return;
 	}
-	xml_document doc;
-	xml_parse_result result = doc.load_file(path.c_str());
-	if (!result)
-	{
-		cerr << "[VFS ERROR] Не получилось открыть "
-			<< "или разобрать XML-файл: "
-			<< path << '\n';
-		cerr << "[VFS ERROR] Причина: "
-			<< result.description() << '\n';
-		return;
-	}
-	xml_node root = doc.document_element();
+	xml_document& doc = vfs_doc;
+	xml_node root = doc.document_element();		
 	xml_node directory = find_directory(root, current_path);
 	xml_node find_file;
 	for (xml_node node : directory.children())
@@ -449,6 +549,8 @@ bool execute(string command, const string& path)
 		who(command);
 	else if (inst == "rev")
 		rev(command, path);
+	else if (inst == "cp")
+		cp(command);
 	else if (inst == "exit")
 	{
 		kill(command);

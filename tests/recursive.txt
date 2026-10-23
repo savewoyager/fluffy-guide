@@ -1,0 +1,9 @@
+ls -l
+cp -r home home_copy
+cd home_copy
+ls -l
+cd /
+ls -l
+cp -r deep/home deep_home_copy
+cd deep
+ls -l

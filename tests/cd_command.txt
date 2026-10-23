@@ -1,9 +1,0 @@
-ls -l
-cd home
-ls -l
-cd ..
-ls -l
-cd deep/home
-ls -l
-cd /
-ls -l

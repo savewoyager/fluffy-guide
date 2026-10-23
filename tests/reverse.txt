@@ -1,4 +1,0 @@
-rev -error
-rev readme.txt
-cd home
-rev notes.txt

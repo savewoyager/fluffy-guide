@@ -1,6 +1,0 @@
-# Первый комментарий
-cd home
-ls -lah
-ls -hal
-ls -l -h -a
-ls -aboba

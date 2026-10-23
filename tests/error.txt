@@ -1,9 +1,4 @@
-//Ошибочный комментарий
-ls -lfg
-ls -agu
-cd homeless
-cd -sdfa
-cd /home/Cheboksary
-who am i
-who -s
-rev not_a_file.txt
+ls -l
+cp smtg.txt smth.txt
+cp -x
+cp deep deep_copy
