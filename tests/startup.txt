@@ -1,0 +1,4 @@
+ls -l
+cp smtg.txt smth.txt
+cp -x
+cp deep deep_copy
